@@ -2,32 +2,37 @@ import express from "express";
 import cors from "cors";
 import crypto from "crypto";
 
-
-let { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+let { privateKey, publicKey } = crypto.generateKeyPairSync("rsa", {
   modulusLength: 2048,
 });
 
 const private_key = privateKey.export({
-  type: 'pkcs1',
-  format: 'pem',
+  type: "pkcs1",
+  format: "pem",
 });
 
 const public_key = publicKey.export({
-  type: 'spki',
-  format: 'pem',
+  type: "spki",
+  format: "pem",
 });
 
-type Database = {
+interface DatabaseEntry {
   data: string;
   signature: string;
-  version: number;
+}
+
+type Database = {
+  [version: number]: DatabaseEntry;
 };
 
 const PORT = 8080;
 const app = express();
-const database = [
-  { data: "Hello world", signature: "", version: 0 },
-] as Database[];
+const database = {
+  0: {
+    data: "Hello World!",
+    signature: "0",
+  },
+} as Database;
 
 function signData(data: string): string {
   const hash = crypto.createHash("sha256").update(data).digest("hex");
@@ -42,8 +47,9 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  const latest = database[database.length - 1];
-  res.json(latest);
+  const { data, signature } = database[Object.keys(database).length - 1];
+  const version = Object.keys(database).length - 1;
+  res.json({ data, signature, version });
 });
 
 app.get("/public-key", (req, res) => {
@@ -53,8 +59,9 @@ app.get("/public-key", (req, res) => {
 app.post("/", (req, res) => {
   const data = req.body.data;
   const signature = signData(data);
-  database.push({ data, signature, version: database.length });
-  res.json({ data, signature });
+  const version = Object.keys(database).length;
+  database[version] = { data, signature };
+  res.json({ data, signature, version });
 });
 
 app.listen(PORT, () => {
