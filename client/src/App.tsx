@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import jsrsasign from "jsrsasign";
 
-const API_URL = "http://localhost:8080";
+export const API_URL = "http://localhost:8080";
 
 type Data = {
   data: string;
@@ -9,12 +9,12 @@ type Data = {
   version?: number;
 };
 
-function App() {
+export function App() {
   const [data, setData] = useState<Data | null>(null);
   const [publicKey, setPublicKey] = useState<string | null>(null);
   const [tampered, setTampred] = useState<boolean>(false);
 
-  const getPublicKey = React.useCallback(async (fetchData = true) => {
+  const getPublicKey = useCallback(async (fetchData = true) => {
     const response = await fetch(`${API_URL}/public-key`);
     const { publicKey } = await response.json();
     setPublicKey(publicKey);
@@ -119,6 +119,7 @@ function App() {
         style={{ fontSize: "20px", width: "500px" }}
         type="text"
         value={publicKey || ""}
+        name="publicKey"
         onChange={(e) => setPublicKey(e.target.value)}
       />
       <div>Saved Data</div>
@@ -126,6 +127,7 @@ function App() {
         style={{ fontSize: "30px" }}
         type="text"
         value={data?.data}
+        name="data"
         onChange={handleDataChange}
       />
 
