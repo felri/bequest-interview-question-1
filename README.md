@@ -24,6 +24,18 @@ In a real-world scenario where I can use external systems I could probably use a
 
 I could also use a smart contract to store the signed hash data, then anyone with the public key of the server can verify the locally generated signature with the one in the smart contract via web3.js or some other lib.
 
+## Tests
+
+```bash
+cd server
+npm run test
+```
+
+```bash
+cd client
+npm run test
+```
+
 DEMO: 
 
 https://github.com/r-muresan/bequest-interview-question-1/assets/56592364/f5678f24-b96f-4c8b-9a67-2c806d9b9085
