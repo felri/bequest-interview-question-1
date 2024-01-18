@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { KJUR } from "jsrsasign";
 
 const API_URL = "http://localhost:8080";
 
@@ -35,7 +36,7 @@ function App() {
   const updateData = async () => {
     await fetch(API_URL, {
       method: "POST",
-      body: JSON.stringify({ data }),
+      body: JSON.stringify({ data: data?.data }),
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
@@ -46,7 +47,36 @@ function App() {
   };
 
   const verifyData = async () => {
-    throw new Error("Not implemented");
+    if (!data?.data || !data?.signature) {
+      alert("No data to verify");
+      return;
+    }
+
+    if (!publicKey) {
+      alert("No public key");
+      return;
+    }
+
+    const isValid = await verifySignature(data.data, data.signature);
+
+    if (isValid) {
+      alert("Data is valid");
+    } else {
+      alert("Data is invalid");
+    }
+  };
+
+  const verifySignature = (data, signature) => {
+    try {
+      const sig = new KJUR.crypto.Signature({ alg: "SHA256withRSA" });
+      sig.init(publicKey);
+      sig.updateString(data);
+
+      return sig.verify(signature);
+    } catch (e) {
+      console.error("Verification error:", e);
+      return false;
+    }
   };
 
   return (
@@ -83,7 +113,7 @@ function App() {
         <button style={{ fontSize: "20px" }} onClick={updateData}>
           Update Data
         </button>
-        <button style={{ fontSize: "20px" }} onClick={verifyData}>
+        <button style={{ fontSize: "20px" }} onClick={verifyData} disabled={!data?.data || !data?.signature}>
           Verify Data
         </button>
       </div>
