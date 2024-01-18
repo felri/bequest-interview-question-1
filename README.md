@@ -4,7 +4,7 @@ Because the question is to focus on the client, I've done the following:
 
 ## Client
 
-1 - react components renders -> get public key -> get data
+1 - react component renders -> get public key -> get data
 
 2 - user updates data -> gets data and signature from server
 
