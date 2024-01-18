@@ -1,28 +1,28 @@
 # Tamper Proof Data
 
-Because the question is to focus on the client, I've done the following: 
+Since the focus of this question is on the client-side, I have implemented the following steps
 
 ## Client
 
-1 - react component renders -> get public key -> get data
-
-2 - user updates data -> gets data and signature from server
-
-3 - the user click verify -> react uses public key to verify the data hash signature 
-
-4 - if signature is incorrect -> warn user -> user request latest db entry by the version (far from perfect)
+  A React component renders, then retrieves the public key and fetches the data.
+  
+  When a user updates the data, the updated data and its signature are fetched from the server.
+  
+  Upon clicking 'verify', React uses the public key to verify the data hash signature.
+  
+  If the signature is incorrect, the user is warned. The user can then request the latest database entry by version (though this is far from perfect).
 
 ## Server
 
-1 - node generates key pair
+Node.js generates a key pair.
 
-2 - request with new data comes in -> sign the hash -> bump db version -> push data into the db array
+When a request with new data comes in, the server signs the hash, bumps the database version, and pushes the data into the database array.
 
-3 - user asks for version N of the db -> server returns said version
+When a user asks for version N of the database, the server returns that specific version.
 
-In a real-world scenario where I can use external systems I could probably use a decentralized db like IPFS/holochain to store each db version.
+In a real-world scenario where external systems can be utilized, using a decentralized database like IPFS or Holochain to store each database version could be a viable option.
 
-I could also use a smart contract to store the signed hash data, then anyone with the public key of the server can verify the locally generated signature with the one in the smart contract via web3.js or some other lib.
+Additionally, using a smart contract to store the signed hash data is feasible. Then, anyone with the public key of the server could verify the locally generated signature against the one in the smart contract using Web3.js or a similar library.
 
 ## Tests
 
