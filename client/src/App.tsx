@@ -1,22 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { KJUR } from "jsrsasign";
+import jsrsasign from "jsrsasign";
 
 const API_URL = "http://localhost:8080";
 
 type Data = {
   data: string;
   signature: string;
+  version?: number;
 };
 
 function App() {
   const [data, setData] = useState<Data | null>(null);
   const [publicKey, setPublicKey] = useState<string | null>(null);
+  const [tampered, setTampred] = useState<boolean>(false);
 
-  const getPublicKey = React.useCallback(async () => {
+  const getPublicKey = React.useCallback(async (fetchData = true) => {
     const response = await fetch(`${API_URL}/public-key`);
     const { publicKey } = await response.json();
     setPublicKey(publicKey);
-    getData();
+    if (fetchData) {
+      getData();
+    }
   }, []);
 
   useEffect(() => {
@@ -29,8 +33,8 @@ function App() {
 
   const getData = async () => {
     const response = await fetch(API_URL);
-    const { data, signature } = await response.json();
-    setData({ data, signature });
+    const { data, signature, version } = await response.json();
+    setData({ data, signature, version });
   };
 
   const updateData = async () => {
@@ -61,23 +65,34 @@ function App() {
 
     if (isValid) {
       alert("Data is valid");
+      setTampred(false);
     } else {
       alert("Data is invalid");
+      setTampred(true);
     }
   };
 
-  const verifySignature = (data, signature) => {
-    try {
-      const sig = new KJUR.crypto.Signature({ alg: "SHA256withRSA" });
-      sig.init(publicKey);
-      sig.updateString(data);
+  const recover = async () => {
+    getPublicKey(false);
+    const currentVersion = Number(data?.version || 0);
+    const response = await fetch(`${API_URL}/recover/${currentVersion}`);
 
+    const { data: newData, signature, version } = await response.json();
+    setData({ data: newData, signature, version });
+    setTampred(false);
+  };
+
+  async function verifySignature(data, signature) {
+    try {
+      const sig = new jsrsasign.KJUR.crypto.Signature({ alg: "SHA1withRSA" });
+      sig.init(publicKey as string);
+      sig.updateString(data);
       return sig.verify(signature);
-    } catch (e) {
-      console.error("Verification error:", e);
+    } catch (error) {
+      console.error("Verification failed:", error);
       return false;
     }
-  };
+  }
 
   return (
     <div
@@ -94,7 +109,12 @@ function App() {
         fontSize: "30px",
       }}
     >
+      <div>DB Version: {data?.version}</div>
+
       <div>Server Public Key</div>
+      <span style={{ fontSize: "16px" }}>
+        You can change the public key to simulate tempering
+      </span>
       <input
         style={{ fontSize: "20px", width: "500px" }}
         type="text"
@@ -113,10 +133,30 @@ function App() {
         <button style={{ fontSize: "20px" }} onClick={updateData}>
           Update Data
         </button>
-        <button style={{ fontSize: "20px" }} onClick={verifyData} disabled={!data?.data || !data?.signature}>
+        <button
+          style={{ fontSize: "20px" }}
+          onClick={verifyData}
+          disabled={!data?.data || !data?.signature}
+        >
           Verify Data
         </button>
       </div>
+      {tampered && (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+            textAlign: "center",
+          }}
+        >
+          <div style={{ color: "red" }}>Data has been tampered with</div>
+          <div style={{ color: "red" }}>Do not trust the data</div>
+          <button style={{ fontSize: "20px" }} onClick={recover}>
+            Recover Last Valid Data
+          </button>
+        </div>
+      )}
     </div>
   );
 }

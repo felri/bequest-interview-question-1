@@ -52,6 +52,22 @@ app.post("/", (req, res) => {
   res.json({ data, signature, version });
 });
 
+app.get("/recover/:version", (req, res) => {
+  try {
+    const version = Number(req.params.version);
+    if (!database[version]) {
+      res.status(404).json({ error: "Version does not exist" });
+      return;
+    }
+
+    const { data, signature } = database[version];
+    res.json({ data, version, signature });
+  } catch (error) {
+    console.error("Error in /recover:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
 });
