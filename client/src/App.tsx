@@ -2,17 +2,34 @@ import React, { useEffect, useState } from "react";
 
 const API_URL = "http://localhost:8080";
 
-function App() {
-  const [data, setData] = useState<string>();
+type Data = {
+  data: string;
+  signature: string;
+};
 
-  useEffect(() => {
+function App() {
+  const [data, setData] = useState<Data | null>(null);
+  const [publicKey, setPublicKey] = useState<string | null>(null);
+
+  const getPublicKey = React.useCallback(async () => {
+    const response = await fetch(`${API_URL}/public-key`);
+    const { publicKey } = await response.json();
+    setPublicKey(publicKey);
     getData();
   }, []);
 
+  useEffect(() => {
+    getPublicKey();
+  }, [getPublicKey]);
+
+  const handleDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setData((old) => ({ ...old, data: e.target.value, signature: "" }));
+  };
+
   const getData = async () => {
     const response = await fetch(API_URL);
-    const { data } = await response.json();
-    setData(data);
+    const { data, signature } = await response.json();
+    setData({ data, signature });
   };
 
   const updateData = async () => {
@@ -47,12 +64,19 @@ function App() {
         fontSize: "30px",
       }}
     >
+      <div>Server Public Key</div>
+      <input
+        style={{ fontSize: "20px", width: "500px" }}
+        type="text"
+        value={publicKey || ""}
+        onChange={(e) => setPublicKey(e.target.value)}
+      />
       <div>Saved Data</div>
       <input
         style={{ fontSize: "30px" }}
         type="text"
-        value={data}
-        onChange={(e) => setData(e.target.value)}
+        value={data?.data}
+        onChange={handleDataChange}
       />
 
       <div style={{ display: "flex", gap: "10px" }}>
